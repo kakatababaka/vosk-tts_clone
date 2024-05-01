@@ -26,11 +26,10 @@ if __name__ == "__main__":
     parser.add_argument("--hpfile", type=str, default="logs/quickvc/config.json", help="path to json config file")
     parser.add_argument("--ptfile", type=str, default="logs/quickvc/quickvc.pth", help="path to pth file")
     parser.add_argument("--txtpath", type=str, default="convert.txt", help="path to txt file")
-    parser.add_argument("--outdir", type=str, default="output/quickvc", help="path to output dir")
     parser.add_argument("--use_timestamp", default=False, action="store_true")
     args = parser.parse_args()
     
-    os.makedirs(args.outdir, exist_ok=True)
+    
     hps = utils.get_hparams_from_file(args.hpfile)
 
     print("Loading model...")
@@ -61,6 +60,8 @@ if __name__ == "__main__":
     with torch.no_grad():
         for line in tqdm(zip(titles, srcs, tgts)):
             title, src, tgt = line
+            if os.path.exists(title):
+                continue
             # tgt
             wav_tgt, _ = librosa.load(tgt, sr=hps.data.sampling_rate)
             wav_tgt, _ = librosa.effects.trim(wav_tgt, top_db=20)
@@ -82,6 +83,8 @@ if __name__ == "__main__":
             c = contentvec_extractor.extract(wav_src).transpose(2,1)
 
             audio = net_g.infer(c, mel=mel_tgt)
+            out_folder = os.path.split(title)[0]
+            os.makedirs(out_folder, exist_ok=True)
  
             audio = audio[0][0].data.cpu().float().numpy() * 32768.0
-            write(os.path.join(args.outdir, f"{title}.wav"), hps.data.sampling_rate, audio.astype(np.int16))
+            write(title, hps.data.sampling_rate, audio.astype(np.int16))
