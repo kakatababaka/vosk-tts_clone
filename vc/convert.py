@@ -51,8 +51,10 @@ if __name__ == "__main__":
     titles, srcs, tgts = [], [], []
     with open(args.txtpath, "r") as f:
         for rawline in f.readlines():
-            title, src, tgt = rawline.strip().split("|")
-            titles.append(title)
+            data = json.loads(rawline)
+            src = data["audio_path"]
+            tgt = src.replace('.wav', '.gen.wav')
+            titles.append('_')
             srcs.append(src)
             tgts.append(tgt)
 
@@ -60,8 +62,6 @@ if __name__ == "__main__":
     with torch.no_grad():
         for line in tqdm(zip(titles, srcs, tgts)):
             title, src, tgt = line
-            if os.path.exists(title):
-                continue
             # tgt
             wav_tgt, _ = librosa.load(tgt, sr=hps.data.sampling_rate)
             wav_tgt, _ = librosa.effects.trim(wav_tgt, top_db=20)
@@ -83,8 +83,6 @@ if __name__ == "__main__":
             c = contentvec_extractor.extract(wav_src).transpose(2,1)
 
             audio = net_g.infer(c, mel=mel_tgt)
-            out_folder = os.path.split(title)[0]
-            os.makedirs(out_folder, exist_ok=True)
  
             audio = audio[0][0].data.cpu().float().numpy() * 32768.0
-            write(title, hps.data.sampling_rate, audio.astype(np.int16))
+            write(src, hps.data.sampling_rate, audio.astype(np.int16))
