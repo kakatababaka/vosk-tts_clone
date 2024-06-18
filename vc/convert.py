@@ -62,28 +62,31 @@ if __name__ == "__main__":
     print("Synthesizing...")
     with torch.no_grad():
         for line in tqdm(zip(titles, srcs, tgts)):
-            title, src, tgt = line
-            # tgt
-            wav_tgt, _ = librosa.load(tgt, sr=hps.data.sampling_rate)
-            wav_tgt, _ = librosa.effects.trim(wav_tgt, top_db=20)
-            wav_tgt = torch.from_numpy(wav_tgt).unsqueeze(0).to(device)
-            mel_tgt = mel_spectrogram_torch(
-                wav_tgt, 
-                hps.data.filter_length,
-                hps.data.n_mel_channels,
-                hps.data.sampling_rate,
-                hps.data.hop_length,
-                hps.data.win_length,
-                hps.data.mel_fmin,
-                hps.data.mel_fmax
-            )
-            # src
-            wav_src, _ = librosa.load(src, sr=hps.data.sampling_rate)
-            wav_src = torch.from_numpy(wav_src).unsqueeze(0).to(device)
-
-            c = contentvec_extractor.extract(wav_src).transpose(2,1)
-
-            audio = net_g.infer(c, mel=mel_tgt)
- 
-            audio = audio[0][0].data.cpu().float().numpy() * 32768.0
-            write(src, hps.data.sampling_rate, audio.astype(np.int16))
+            try:
+                title, src, tgt = line
+                # tgt
+                wav_tgt, _ = librosa.load(tgt, sr=hps.data.sampling_rate)
+                wav_tgt, _ = librosa.effects.trim(wav_tgt, top_db=20)
+                wav_tgt = torch.from_numpy(wav_tgt).unsqueeze(0).to(device)
+                mel_tgt = mel_spectrogram_torch(
+                    wav_tgt, 
+                    hps.data.filter_length,
+                    hps.data.n_mel_channels,
+                    hps.data.sampling_rate,
+                    hps.data.hop_length,
+                    hps.data.win_length,
+                    hps.data.mel_fmin,
+                    hps.data.mel_fmax
+                )
+                # src
+                wav_src, _ = librosa.load(src, sr=hps.data.sampling_rate)
+                wav_src = torch.from_numpy(wav_src).unsqueeze(0).to(device)
+    
+                c = contentvec_extractor.extract(wav_src).transpose(2,1)
+    
+                audio = net_g.infer(c, mel=mel_tgt)
+     
+                audio = audio[0][0].data.cpu().float().numpy() * 32768.0
+                write(src, hps.data.sampling_rate, audio.astype(np.int16))
+            except:
+                pass
