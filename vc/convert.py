@@ -5,6 +5,7 @@ import librosa
 import time
 from scipy.io.wavfile import write
 from tqdm import tqdm
+import json
 
 import utils
 from models import SynthesizerTrn
