@@ -53,8 +53,8 @@ if __name__ == "__main__":
     with open(args.txtpath, "r") as f:
         for rawline in f.readlines():
             data = json.loads(rawline)
-            src = data["audio_path"]
-            tgt = src.replace('.wav', '.gen.wav')
+            tgt = data["audio_path"]
+            scr = tgt.replace('.wav', '.gen.wav')
             titles.append('_')
             srcs.append(src)
             tgts.append(tgt)
